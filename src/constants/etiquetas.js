@@ -1,0 +1,18 @@
+export const ETIQUETAS_RECETA = [
+  'Dulce',
+  'Salado',
+  'Rápido',
+  'Saludable',
+  'Postres',
+  'Desayuno',
+  'Frito',
+  'Horneado',
+  'Microondas',
+  'Vegetariano',
+  'Vegano',
+  'SIN T.A.C',
+  'Pastas',
+  'Carnes',
+  'Sopas',
+  'Parrilla',
+]

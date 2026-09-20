@@ -72,6 +72,7 @@ export const crear = async (receta) => {
       usuarioId: auth.currentUser.uid,
       creadoPor: auth.currentUser.email || 'Usuario',
       fechaCreacion: new Date(),
+        favoritos: {},
     }
     const docRef = await addDoc(collection(db, COLLECTION_NAME), recetaConFecha)
     return docRef.id
@@ -117,16 +118,31 @@ export const eliminar = async (id) => {
 }
 
 /**
- * Cambia el estado de un campo booleano (como favorita)
+ * Cambia el estado favorito del usuario actual en una receta.
  * @param {string} id - ID de la receta
- * @param {string} campo - Nombre del campo a cambiar
- * @returns {Promise<void>}
+ * @returns {Promise<number>} - Nuevo estado: 0 o 1
  */
-/**
- * Mantiene el estado anterior del proyecto sin funcionalidad de favoritos.
- */
-export const cambiarEstado = async () => {
-  return null
+export const cambiarEstado = async (id) => {
+  try {
+    if (!auth.currentUser) {
+      throw new Error('Debes iniciar sesión para marcar favoritos')
+    }
+
+    const receta = await obtenerPorId(id)
+    const usuarioId = auth.currentUser.uid
+    const estadoActual = receta.favoritos?.[usuarioId] === 1 ? 1 : 0
+    const nuevoEstado = estadoActual === 1 ? 0 : 1
+    const docRef = doc(db, COLLECTION_NAME, id)
+
+    await updateDoc(docRef, {
+      [`favoritos.${usuarioId}`]: nuevoEstado,
+    })
+
+    return nuevoEstado
+  } catch (error) {
+    console.error('Error al cambiar favorito:', error)
+    throw error
+  }
 }
 
 /**

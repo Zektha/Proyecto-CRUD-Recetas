@@ -18,9 +18,14 @@ const CreateReceta = () => {
   }
 
   return (
-    <div style={{ padding: '32px 20px' }}>
+    <main className="content-shell create-page">
+      <div className="create-page__toolbar">
+        <button className="button button--quiet" onClick={() => navigate(-1)}>
+          ← Volver
+        </button>
+      </div>
       <RecetaForm modo="crear" onSubmit={handleSubmit} cargando={cargando} />
-    </div>
+    </main>
   )
 }
 

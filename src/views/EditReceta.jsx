@@ -48,22 +48,18 @@ const EditReceta = ({ usuario }) => {
   }
 
   if (error) {
-    return (
-      <div style={{ padding: '32px 20px' }}>
-        <ErrorMessage mensaje={error} onDismiss={() => setError('')} />
-      </div>
-    )
+    return <main className="content-shell"><ErrorMessage mensaje={error} onDismiss={() => setError('')} /></main>
   }
 
   return (
-    <div style={{ padding: '32px 20px' }}>
-      <RecetaForm
-        modo="editar"
-        recetaInicial={receta}
-        onSubmit={handleSubmit}
-        cargando={cargando}
-      />
-    </div>
+    <main className="content-shell create-page">
+      <div className="create-page__toolbar">
+        <button className="button button--quiet" onClick={() => navigate(-1)}>
+          ← Volver
+        </button>
+      </div>
+      <RecetaForm modo="editar" recetaInicial={receta} onSubmit={handleSubmit} cargando={cargando} />
+    </main>
   )
 }
 

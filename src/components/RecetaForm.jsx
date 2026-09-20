@@ -1,53 +1,49 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ETIQUETAS_RECETA } from '../constants/etiquetas'
 import { validarReceta } from '../validators/recetaValidator'
 import ErrorMessage from './ErrorMessage'
 
-/**
- * Formulario para crear o editar recetas
- */
+const recetaVacia = {
+  nombre: '',
+  categoría: '',
+  tiempo: '',
+  dificultad: '',
+  rating: '',
+  instrucciones: '',
+  ingredientes: '',
+  etiquetas: [],
+}
+
 const RecetaForm = ({ recetaInicial, onSubmit, cargando = false, modo = 'crear' }) => {
-  const [receta, setReceta] = useState(
-    recetaInicial || {
-      nombre: '',
-      categoría: '',
-      tiempo: '',
-      dificultad: '',
-      rating: '',
-      instrucciones: '',
-      ingredientes: '',
-    }
-  )
+  const [receta, setReceta] = useState(recetaInicial || recetaVacia)
   const [errores, setErrores] = useState([])
   const nombreInputRef = useRef(null)
 
-  // Focus en el campo nombre cuando se monta el componente
   useEffect(() => {
     nombreInputRef.current?.focus()
   }, [])
 
-  // Actualizar receta cuando cambia recetaInicial
   useEffect(() => {
-    if (recetaInicial) {
-      setReceta(recetaInicial)
-    }
+    if (recetaInicial) setReceta({ ...recetaInicial, etiquetas: recetaInicial.etiquetas || [] })
   }, [recetaInicial])
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    setReceta((prev) => ({ ...prev, [name]: value }))
+    if (errores.length > 0) setErrores([])
+  }
+
+  const alternarEtiqueta = (etiqueta) => {
     setReceta((prev) => ({
       ...prev,
-      [name]: value,
+      etiquetas: prev.etiquetas?.includes(etiqueta)
+        ? prev.etiquetas.filter((item) => item !== etiqueta)
+        : [...(prev.etiquetas || []), etiqueta],
     }))
-    // Limpiar errores cuando el usuario empieza a escribir
-    if (errores.length > 0) {
-      setErrores([])
-    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    // Validar
     const { valido, errores: erroresValidacion } = validarReceta(receta)
     if (!valido) {
       setErrores(erroresValidacion)
@@ -56,17 +52,8 @@ const RecetaForm = ({ recetaInicial, onSubmit, cargando = false, modo = 'crear' 
 
     try {
       await onSubmit(receta)
-      // Limpiar formulario solo si es modo crear
       if (modo === 'crear') {
-        setReceta({
-          nombre: '',
-          categoría: '',
-          tiempo: '',
-          dificultad: '',
-          rating: '',
-          instrucciones: '',
-          ingredientes: '',
-        })
+        setReceta({ ...recetaVacia })
         nombreInputRef.current?.focus()
       }
       setErrores([])
@@ -76,120 +63,50 @@ const RecetaForm = ({ recetaInicial, onSubmit, cargando = false, modo = 'crear' 
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        backgroundColor: 'white',
-        padding: '24px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        maxWidth: '600px',
-        margin: '0 auto',
-      }}
-    >
-      <h2 style={{ marginTop: 0, marginBottom: '24px', color: '#333' }}>
-        {modo === 'crear' ? 'Nueva Receta' : 'Editar Receta'}
-      </h2>
+    <form className="form-card" onSubmit={handleSubmit}>
+      <h2>{modo === 'crear' ? 'Nueva receta' : 'Editar receta'}</h2>
 
       {errores.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
+        <div>
           {errores.map((error, idx) => (
-            <ErrorMessage
-              key={idx}
-              mensaje={error}
-              onDismiss={() => setErrores(errores.filter((_, i) => i !== idx))}
-            />
+            <ErrorMessage key={idx} mensaje={error} onDismiss={() => setErrores(errores.filter((_, i) => i !== idx))} />
           ))}
         </div>
       )}
 
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-          Nombre *
-        </label>
-        <input
-          ref={nombreInputRef}
-          type="text"
-          name="nombre"
-          value={receta.nombre}
-          onChange={handleChange}
-          disabled={cargando}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px',
-            boxSizing: 'border-box',
-          }}
-          placeholder="Ej: Pasta a la Carbonara"
-        />
+      <div className="form-field">
+        <label className="field-label" htmlFor="nombre">Nombre *</label>
+        <input ref={nombreInputRef} className="field-input" id="nombre" type="text" name="nombre" value={receta.nombre} onChange={handleChange} disabled={cargando} placeholder="Ej: Pasta a la Carbonara" />
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-          Categoría *
-        </label>
-        <input
-          type="text"
-          name="categoría"
-          value={receta.categoría}
-          onChange={handleChange}
-          disabled={cargando}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px',
-            boxSizing: 'border-box',
-          }}
-          placeholder="Ej: Italiana, Postres, etc."
-        />
+      <div className="form-field">
+        <label className="field-label" htmlFor="categoría">Categoría *</label>
+        <input className="field-input" id="categoría" type="text" name="categoría" value={receta.categoría} onChange={handleChange} disabled={cargando} placeholder="Ej: Italiana, casera, etc." />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-            Tiempo (minutos) *
-          </label>
-          <input
-            type="number"
-            name="tiempo"
-            value={receta.tiempo}
-            onChange={handleChange}
-            disabled={cargando}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '14px',
-              boxSizing: 'border-box',
-            }}
-            placeholder="30"
-            min="1"
-          />
+      <fieldset className="tag-fieldset">
+        <legend>Etiquetas</legend>
+        <div className="tag-selector">
+          {ETIQUETAS_RECETA.map((etiqueta) => {
+            const seleccionada = receta.etiquetas?.includes(etiqueta)
+            return (
+              <label className={`tag-option ${seleccionada ? 'tag-option--selected' : ''}`} key={etiqueta}>
+                <input type="checkbox" checked={seleccionada} onChange={() => alternarEtiqueta(etiqueta)} disabled={cargando} />
+                {etiqueta}
+              </label>
+            )
+          })}
         </div>
+      </fieldset>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-            Dificultad *
-          </label>
-          <select
-            name="dificultad"
-            value={receta.dificultad}
-            onChange={handleChange}
-            disabled={cargando}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '14px',
-              boxSizing: 'border-box',
-            }}
-          >
+      <div className="form-grid">
+        <div className="form-field">
+          <label className="field-label" htmlFor="tiempo">Tiempo (minutos) *</label>
+          <input className="field-input" id="tiempo" type="number" name="tiempo" value={receta.tiempo} onChange={handleChange} disabled={cargando} placeholder="30" min="1" />
+        </div>
+        <div className="form-field">
+          <label className="field-label" htmlFor="dificultad">Dificultad *</label>
+          <select className="field-select" id="dificultad" name="dificultad" value={receta.dificultad} onChange={handleChange} disabled={cargando}>
             <option value="">Seleccionar...</option>
             <option value="fácil">Fácil</option>
             <option value="medio">Medio</option>
@@ -198,94 +115,23 @@ const RecetaForm = ({ recetaInicial, onSubmit, cargando = false, modo = 'crear' 
         </div>
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-          Rating (1-5)
-        </label>
-        <input
-          type="number"
-          name="rating"
-          value={receta.rating}
-          onChange={handleChange}
-          disabled={cargando}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px',
-            boxSizing: 'border-box',
-          }}
-          placeholder="4"
-          min="1"
-          max="5"
-        />
+      <div className="form-field">
+        <label className="field-label" htmlFor="rating">Rating (1-5)</label>
+        <input className="field-input" id="rating" type="number" name="rating" value={receta.rating} onChange={handleChange} disabled={cargando} placeholder="4" min="1" max="5" />
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-          Ingredientes
-        </label>
-        <textarea
-          name="ingredientes"
-          value={receta.ingredientes}
-          onChange={handleChange}
-          disabled={cargando}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px',
-            boxSizing: 'border-box',
-            fontFamily: 'inherit',
-            minHeight: '100px',
-            resize: 'vertical',
-          }}
-          placeholder="Ingresa los ingredientes (uno por línea)"
-        />
+      <div className="form-field">
+        <label className="field-label" htmlFor="ingredientes">Ingredientes</label>
+        <textarea className="field-textarea" id="ingredientes" name="ingredientes" value={receta.ingredientes} onChange={handleChange} disabled={cargando} placeholder="Ingresa los ingredientes (uno por línea)" />
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '4px', color: '#333' }}>
-          Instrucciones
-        </label>
-        <textarea
-          name="instrucciones"
-          value={receta.instrucciones}
-          onChange={handleChange}
-          disabled={cargando}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px',
-            boxSizing: 'border-box',
-            fontFamily: 'inherit',
-            minHeight: '120px',
-            resize: 'vertical',
-          }}
-          placeholder="Ingresa el paso a paso"
-        />
+      <div className="form-field">
+        <label className="field-label" htmlFor="instrucciones">Instrucciones</label>
+        <textarea className="field-textarea" id="instrucciones" name="instrucciones" value={receta.instrucciones} onChange={handleChange} disabled={cargando} placeholder="Ingresa el paso a paso" />
       </div>
 
-      <button
-        type="submit"
-        disabled={cargando}
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          backgroundColor: cargando ? '#ccc' : '#3b82f6',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          cursor: cargando ? 'not-allowed' : 'pointer',
-        }}
-      >
-        {cargando ? 'Guardando...' : modo === 'crear' ? 'Crear Receta' : 'Actualizar Receta'}
+      <button className="button button--primary form-submit" type="submit" disabled={cargando}>
+        {cargando ? 'Guardando...' : modo === 'crear' ? 'Crear receta' : 'Actualizar receta'}
       </button>
     </form>
   )

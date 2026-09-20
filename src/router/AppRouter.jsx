@@ -2,12 +2,14 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import Home from '../views/Home'
 import Login from '../views/Login'
+import Register from '../views/Register'
 import CreateReceta from '../views/CreateReceta'
 import EditReceta from '../views/EditReceta'
 import RecetaDetail from '../views/RecetaDetail'
 import NotFound from '../views/NotFound'
+import Privacy from '../views/Privacy'
 
-const AppRouter = ({ usuario, onLogin, onLogout }) => {
+const AppRouter = ({ usuario, onLogin, onRegister, onLogout }) => {
   return (
     <BrowserRouter>
       <Routes>
@@ -21,6 +23,13 @@ const AppRouter = ({ usuario, onLogin, onLogout }) => {
             usuario ? <Navigate to="/" replace /> : <Login onLogin={onLogin} />
           }
         />
+        <Route
+          path="/registro"
+          element={
+            usuario ? <Navigate to="/" replace /> : <Register onRegister={onRegister} />
+          }
+        />
+        <Route path="/privacidad" element={<Privacy />} />
         <Route
           path="/recetas/nueva"
           element={

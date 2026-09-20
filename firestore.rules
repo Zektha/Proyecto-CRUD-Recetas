@@ -2,12 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /recetas/{recetaId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow create: if request.auth != null
         && request.resource.data.usuarioId == request.auth.uid
         && request.resource.data.creadoPor == request.auth.token.email;
       allow update: if request.auth != null
-        && resource.data.usuarioId == request.auth.uid;
+        && (
+          resource.data.usuarioId == request.auth.uid ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoritos'])
+            && request.resource.data.get('favoritos', {}).diff(resource.data.get('favoritos', {})).affectedKeys().hasOnly([request.auth.uid])
+            && request.resource.data.get('favoritos', {}).get(request.auth.uid, 0) in [0, 1]
+          )
+        );
       allow delete: if request.auth != null
         && resource.data.usuarioId == request.auth.uid;
     }
